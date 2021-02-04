@@ -48,8 +48,8 @@ class UnknownError(Exception):
 
 
 class Client:
-    def __init__(self, host, port=7689, auto_reconnect=True):
-        self._connection = Connection(host, port, auto_reconnect)
+    def __init__(self, host, port=7689, auto_reconnect=True, use_encryption=False, encryption_parameters=dict()):
+        self._connection = Connection(host, port, auto_reconnect, use_encryption, encryption_parameters)
 
     def run_event_loop(self):
         self._connection.run_event_loop()
@@ -296,7 +296,7 @@ class Node:
 
 
 class Connection:
-    def __init__(self, host, port, auto_reconnect):
+    def __init__(self, host, port, auto_reconnect, use_encryption, encryption_parameters):
         self._node_tree = NodeTree(self)
         self._structure_requests = Requests()
         self._time_request = Promise()
@@ -304,7 +304,13 @@ class Connection:
         self._last_time_diff_update = 0
         self._is_connected = False
         self._auto_reconnect = auto_reconnect
-        self._ws = self._connect("ws://" + host + ":" + str(port))
+        self._use_encryption = use_encryption
+        self._encryption_parameters = encryption_parameters
+        if use_encryption:
+            protocol = "wss://"
+        else:
+            protocol = "ws://"
+        self._ws = self._connect(protocol + host + ":" + str(port))
 
     def node_tree(self):
         return self._node_tree
@@ -330,11 +336,11 @@ class Connection:
         self._compose_and_send_value(variant)
 
     def run_event_loop(self):
-        self._ws.run_forever()
+        self._ws.run_forever(sslopt=self._encryption_parameters)
         while self._auto_reconnect:
             sleep(1)
             self._ws = self._connect(self._ws.url)
-            self._ws.run_forever()
+            self._ws.run_forever(sslopt=self._encryption_parameters)
 
     def close(self):
         self._auto_reconnect = False

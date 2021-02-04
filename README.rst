@@ -54,6 +54,10 @@ Client(host, port, auto_reconnect)
 
     auto_reconnect - Optional argument to enable/disable automatic reconnect when connection is lost. Defaults to True if not specified.
 
+    use_encryption - Optional argument to enable connecting to encrypted CDP API
+
+    encryption_parameters - Optional argument to set encryption parameters, like TLS certificates or hostname verification
+
 - Returns
 
     The connected client object.
@@ -63,6 +67,12 @@ Client(host, port, auto_reconnect)
     .. code:: python
 
         client = cdp.Client('127.0.0.1')
+
+- Connection example to encrypted CDP API (without certificate verification)
+
+    .. code:: python
+
+        client = cdp.Client('127.0.0.1', 7689, True, True, {"cert_reqs": ssl.CERT_NONE})
 
 Instance Methods / Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~
